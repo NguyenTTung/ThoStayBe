@@ -7,8 +7,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using FirebaseAdmin;
-using Google.Apis.Auth.OAuth2;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<BACK_ENDContext>(options =>
@@ -58,7 +56,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 // Add services to the container.
-
+builder.Services.AddSignalR();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -75,7 +73,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyCors,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:3000", "http://thobe.runasp.net")
+                          policy.WithOrigins("http://localhost:3000")
                                 .AllowAnyHeader()
                                 .AllowAnyMethod()
                                 .AllowCredentials();
@@ -84,14 +82,10 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-if (FirebaseApp.DefaultInstance == null)
+FirebaseApp.Create(new AppOptions()
 {
-    FirebaseApp.Create(new AppOptions()
-    {
-        Credential = GoogleCredential.FromFile("firebase-config.json")
-    });
-}
-
+    Credential = GoogleCredential.FromFile("firebase-config.json")
+});
 
 using (var scope = app.Services.CreateScope())
 {
@@ -120,6 +114,8 @@ app.UseHttpsRedirection();
 app.UseCors(MyCors);
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+app.MapHub<ChatHub>("/chathub");
 
 app.Run();
