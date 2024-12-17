@@ -75,7 +75,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyCors,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:3000")
+                          policy.WithOrigins("http://localhost:3000", "http://thobe.runasp.net")
                                 .AllowAnyHeader()
                                 .AllowAnyMethod()
                                 .AllowCredentials();
@@ -84,10 +84,14 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-FirebaseApp.Create(new AppOptions()
+if (FirebaseApp.DefaultInstance == null)
 {
-    Credential = GoogleCredential.FromFile("firebase-config.json")
-});
+    FirebaseApp.Create(new AppOptions()
+    {
+        Credential = GoogleCredential.FromFile("firebase-config.json")
+    });
+}
+
 
 using (var scope = app.Services.CreateScope())
 {
@@ -116,8 +120,6 @@ app.UseHttpsRedirection();
 app.UseCors(MyCors);
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-app.MapHub<ChatHub>("/chathub");
 
 app.Run();
